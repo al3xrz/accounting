@@ -1,10 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from typing import List
-from sqlalchemy.orm import Session
 from schemes.agent import SAgentCreate, SAgent
-from models.agent import Agent
-from .dependensy import get_db
-
+from dao.agent import AgentDAO
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(
     prefix="/agents",
@@ -13,14 +11,14 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[SAgent])
-def all(db: Session = Depends(get_db)):
-    db_agents = db.query(Agent).all()
+def all():
+    db_agents = AgentDAO.find_all()
     return db_agents
 
 
 @router.get("/{agent_id}", response_model=SAgent)
-def get_by_id(agent_id: int, db=Depends(get_db)):
-    db_agent = db.query(Agent).filter(Agent.id == agent_id).first()
+def get_by_id(agent_id: int):
+    db_agent = AgentDAO.find_by_id(model_id=agent_id)
     if db_agent:
         return db_agent
     else:
@@ -28,9 +26,10 @@ def get_by_id(agent_id: int, db=Depends(get_db)):
 
 
 @router.post("/")
-def create(agent: SAgentCreate, db: Session = Depends(get_db)):
-    db_agent = Agent(name=agent.name)
-    db.add(db_agent)
-    db.commit()
-    db.refresh(db_agent)
-    return {"message": "Агент успешно создан"}
+def create(agent: SAgentCreate):
+    try:
+        AgentDAO.add(name=agent.name)
+        return {"detail": "Агент успешно создан"}
+    except IntegrityError:
+        print("Организация с таким именем уже существует")
+        raise HTTPException(409, "Организация уже существует")

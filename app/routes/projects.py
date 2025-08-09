@@ -1,33 +1,28 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from sqlalchemy.orm import selectinload
-from models import Project
-from .dependensy import get_db
-from schemes.projects import SProjectCreate 
-
+from schemes.projects import SProjectCreate
+from dao.project import ProjectDAO
+from sqlalchemy.exc import IntegrityError
 
 router = APIRouter(
     prefix="/projects",
-    tags = ["Проекты"]
+    tags=["Проекты"]
 )
 
+
 @router.get("/")
-def all(db=Depends(get_db)):
-    db_projects = db.query(Project).all()
+def all():
+    db_projects = ProjectDAO.find_all()
     return db_projects
 
-@router.get("/poulated")
-def all_populated(db=Depends(get_db)):
-    populated_projects = db.query(Project)\
-    .options(
-        selectinload(Project.agent),
-        selectinload(Project.client)
-    ).all()
+
+@router.get("/populated")
+def all_populated():
+    populated_projects = ProjectDAO.all_populated()
     return populated_projects
 
+
 @router.post("/")
-def create(project: SProjectCreate, db=Depends(get_db)):
-    db_project = Project(client_id=project.client_id, agent_id=project.agent_id)
-    db.add(db_project)
-    db.commit()
-    db.refresh(db_project)
-    return {"message" : "Проект успешно создан"}
+def create(project: SProjectCreate):
+    ProjectDAO.create_project_safe(project_data=project)
+    return {"message": "Проект успешно создан"}
