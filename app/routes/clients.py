@@ -29,7 +29,7 @@ def get_by_id(client_id: int):
 def create(client: SClientCreate):
     try:
         ClientDAO.add(name=client.name)
-        return {"detail": "Новый заказчик успешно создан"}
+        return {"detail": "Заказчик успешно создан"}
     except IntegrityError:
         print("Заказчик уже существует")
         raise HTTPException(409, "Заказчик уже существует")
