@@ -9,4 +9,4 @@ class ContractStatus(Base):
 
     id = Column(Integer, autoincrement=True, primary_key=True, comment="Уникальный идентификатор")
     code = Column(Integer, unique=True, comment="Числовой код статуса", nullable=False)
-    explanations = Column(String(255), unique=True, comment="Текстовое описание статуса", nullable=False)
+    explanation = Column(String(255), unique=True, comment="Текстовое описание статуса", nullable=False)
